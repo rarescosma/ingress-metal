@@ -4,3 +4,4 @@ pkgroot/opt
 pkgroot/usr/local/lib
 pkgroot/usr/local/share
 /*.deb
+/var
