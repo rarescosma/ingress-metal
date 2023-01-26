@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 DOT=$(cd -P "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)
+UPSTREAM=hub.getbetter.ro/ingress-nginx-controller:v1.5.2
 
 main() {
     _deps=(
@@ -9,17 +10,17 @@ main() {
         "dpkg-deb"
     )
     for _dep in "${_deps[@]}"; do
-        if ! command -v "$_dep"; then
+        if ! command -v "$_dep" >/dev/null; then
             echo -e "couln't find $_dep; aborting"
             exit 1
         fi
     done
 
-    upstream=hub.getbetter.ro/ingress-nginx-controller:v1.5.2
     c_name="ingress-$(openssl rand -hex 12)"
-    #c_name="ingress-ab8acda870a7eec6d8c144e1"
-    echo $c_name
-    docker run -d --rm --name $c_name --entrypoint="/bin/bash" -v ${DOT}/build.sh:/build.sh -v ${DOT}/exodus:/exodus --user root $upstream /build.sh detach
+    docker run -d --rm --name $c_name --entrypoint="/bin/bash" \
+        -v ${DOT}/build.sh:/build.sh -v ${DOT}/exodus:/exodus \
+        --user root \
+        $UPSTREAM /build.sh detach
     docker exec -it $c_name /build.sh do_exodus
 
     _extras=(
@@ -41,6 +42,7 @@ main() {
     cp -f ${DOT}/run.sh "$_opt/bin/"
 
     dpkg-deb --build --root-owner-group pkgroot ingress-metal.deb
+    docker rm -f -t0 $c_name
 }
 
 detach() {
