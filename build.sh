@@ -3,6 +3,9 @@
 DOT=$(cd -P "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)
 UPSTREAM=hub.getbetter.ro/ingress-nginx-controller:v1.5.2
 
+LUA_SHARE="/usr/local/share/lua/5.1"
+LUA_LIB="/usr/local/lib/lua/5.1"
+
 main() {
     _deps=(
         "openssl"
@@ -25,9 +28,9 @@ main() {
 
     _extras=(
         "/etc/nginx"
-        "/usr/local/share/lua/5.1"
-        "/usr/local/lib/lua/5.1/cjson.so"
-        "/usr/local/lib/lua/5.1/librestychash.so"
+        "${LUA_SHARE}"
+        "${LUA_LIB}/cjson.so"
+        "${LUA_LIB}/librestychash.so"
     )
     for _extra in "${_extras[@]}"; do
         _to="${DOT}/pkgroot$(dirname $_extra)/"
@@ -63,10 +66,10 @@ do_exodus() {
     exodus -o /exodus/nginx-setup nginx
 
     # lua things
-    mkdir -p /usr/local/share/lua/5.1
-    mv /usr/local/lib/lua/ngx /usr/local/share/lua/5.1/
-    mv /usr/local/lib/lua/resty /usr/local/share/lua/5.1/
-    mv /usr/local/lib/lua/librestychash.so /usr/local/lib/lua/5.1/
+    mkdir -p "${LUA_SHARE}"
+    mv /usr/local/lib/lua/ngx "${LUA_SHARE}"/
+    mv /usr/local/lib/lua/resty "${LUA_SHARE}"/
+    mv /usr/local/lib/lua/librestychash.so "${LUA_LIB}"/
 }
 
 cleanup() {
