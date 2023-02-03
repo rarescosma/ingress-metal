@@ -40,6 +40,7 @@ main() {
     ${DOT}/exodus/controller-setup "$_opt"
     ${DOT}/exodus/nginx-setup "$_opt"
     cp -f ${DOT}/run.sh "$_opt/bin/"
+    cp -f ${DOT}/is-up.sh "$_opt/bin/"
 
     dpkg-deb --build --root-owner-group pkgroot ingress-metal.deb
     docker rm -f -t0 $c_name
