@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 DOT=$(cd -P "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)
-UPSTREAM=hub.getbetter.ro/ingress-nginx-controller:v1.5.2
+IMAGE="${IMAGE:-registry.k8s.io/ingress-nginx/controller:v1.5.1}"
 
 LUA_SHARE="/usr/local/share/lua/5.1"
 LUA_LIB="/usr/local/lib/lua/5.1"
@@ -23,8 +23,8 @@ main() {
     docker run -d --rm --name $c_name --entrypoint="/bin/bash" \
         -v ${DOT}/build.sh:/build.sh -v ${DOT}/exodus:/exodus \
         --user root \
-        $UPSTREAM /build.sh detach
     docker exec -it $c_name /build.sh do_exodus
+        ${IMAGE} /build.sh detach
 
     _extras=(
         "/etc/nginx"
