@@ -51,7 +51,7 @@ main() {
 }
 
 detach() {
-    sleep 3600
+    sleep infinity
 }
 
 do_exodus() {
