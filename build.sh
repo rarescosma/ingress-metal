@@ -11,7 +11,7 @@ main() {
     )
     for _dep in "${_deps[@]}"; do
         if ! command -v "$_dep" >/dev/null; then
-            echo -e "couln't find $_dep; aborting"
+            echo -e "couldn't find $_dep; aborting"
             exit 1
         fi
     done
