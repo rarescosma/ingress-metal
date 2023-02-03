@@ -2,6 +2,7 @@
 
 DOT=$(cd -P "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)
 IMAGE="${IMAGE:-registry.k8s.io/ingress-nginx/controller:v1.5.1}"
+DOCKER="${DOCKER:-docker}"
 
 LUA_SHARE="/usr/local/share/lua/5.1"
 LUA_LIB="/usr/local/lib/lua/5.1"
@@ -9,7 +10,7 @@ LUA_LIB="/usr/local/lib/lua/5.1"
 main() {
     _deps=(
         "openssl"
-        "docker"
+        "${DOCKER}"
         "dpkg-deb"
     )
     for _dep in "${_deps[@]}"; do
@@ -20,11 +21,11 @@ main() {
     done
 
     c_name="ingress-$(openssl rand -hex 12)"
-    docker run -d --rm --name $c_name --entrypoint="/bin/bash" \
+    ${DOCKER} run -d --rm --name $c_name --entrypoint="/bin/bash" \
         -v ${DOT}/build.sh:/build.sh -v ${DOT}/exodus:/exodus \
         --user root \
-    docker exec -it $c_name /build.sh do_exodus
         ${IMAGE} /build.sh detach
+    ${DOCKER} exec -it $c_name /build.sh do_exodus
 
     _extras=(
         "/etc/nginx"
@@ -35,7 +36,7 @@ main() {
     for _extra in "${_extras[@]}"; do
         _to="${DOT}/pkgroot$(dirname $_extra)/"
         mkdir -p $_to
-        docker cp $c_name:$_extra $_to
+        ${DOCKER} cp $c_name:$_extra $_to
     done
 
     _opt="${DOT}/pkgroot/opt/ingress-metal"
@@ -46,7 +47,7 @@ main() {
     cp -f ${DOT}/bin/is-up.sh "$_opt/bin/"
 
     dpkg-deb --build --root-owner-group pkgroot ingress-metal.deb
-    docker rm -f -t0 $c_name
+    ${DOCKER} rm -f -t0 $c_name
 }
 
 detach() {
@@ -73,7 +74,7 @@ do_exodus() {
 }
 
 cleanup() {
-    docker ps -a | grep "ingress-" | cut -d" " -f1 | xargs docker rm -f -t0
+    ${DOCKER} ps -a | grep "ingress-" | cut -d" " -f1 | xargs ${DOCKER} rm -f -t0
     rm -rf ${DOT}/pkgroot/{usr/local/lib,etc,opt} ${DOT}/*.deb
 }
 
