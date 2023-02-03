@@ -4,6 +4,7 @@ DOT=$(cd -P "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)
 KC="${1}"
 NS="${NS:-ingress-system}"
 CONFIG_MAP="${CONFIG_MAP:-ingress-metal}"
+IFACE="${IFACE:-eth0}"
 
 if ! test -f "$(readlink -f "${KC}")"; then
   echo -e "pass me the path to a kubeconfig"
@@ -29,9 +30,9 @@ export POD_NAME=$(\
     -o jsonpath='{.items[0].metadata.name}')
 
 RULES="$(sudo iptables-save)"
-(echo "$RULES" | grep 'ni-block-10254') || sudo iptables -A INPUT -i 'eth0' -p tcp \
+(echo "$RULES" | grep 'ni-block-10254') || sudo iptables -A INPUT -i ${IFACE} -p tcp \
     --dport 10254 -m comment --comment 'ni-block-10254' -j DROP 
-(echo "$RULES" | grep 'ni-block-8181') || sudo iptables -A INPUT -i 'eth0' -p tcp \
+(echo "$RULES" | grep 'ni-block-8181') || sudo iptables -A INPUT -i ${IFACE} -p tcp \
     --dport 8181 -m comment --comment 'ni-block-8181' -j DROP
 
 sudo -E ${DOT}/nginx-ingress-controller --http-port=80 --https-port=443 \
