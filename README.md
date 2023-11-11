@@ -29,14 +29,14 @@ Or, to pull a specific image, perhaps from a different registry:
 But why not?
 
 The main scenario is to simplify the ingress setup for a virtualized
-Kubernetes setup: one metal server runs several worker node VMs and we need to
+Kubernetes setup: one metal server hosts several worker node VMs and we need to
 route HTTP(s) traffic to the pods.
 
-Normally wd'd have `ingress-nginx` deployed as a DaemonSet with proxy
+Normally we'd have `ingress-nginx` deployed as a DaemonSet with proxy
 protocol turned on + another layer of nginx running on the metal host proxying
 requests to the inner nginx.
 
-By using this we eliminate the proxying so traffic flows from outside, thru
+By using `ingress-metal` we eliminate the proxying so traffic flows from the public network, through 
 the `ingress-metal` nginx running on metal, then directly to the pods.
 
 ### Operation
