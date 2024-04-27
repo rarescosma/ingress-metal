@@ -3,5 +3,6 @@ pkgroot/etc
 pkgroot/opt
 pkgroot/usr/local/lib
 pkgroot/usr/local/share
+pkgroot/usr/lib
 /*.deb
 /var

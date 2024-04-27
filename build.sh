@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 DOT=$(cd -P "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)
-IMAGE="${IMAGE:-registry.k8s.io/ingress-nginx/controller:v1.5.1}"
+IMAGE="${IMAGE:-registry.k8s.io/ingress-nginx/controller:v1.10.1}"
 DOCKER="${DOCKER:-docker}"
 
 LUA_SHARE="/usr/local/share/lua/5.1"
@@ -32,11 +32,14 @@ main() {
         "${LUA_SHARE}"
         "${LUA_LIB}/cjson.so"
         "${LUA_LIB}/librestychash.so"
+        "/usr/lib/libbrotlicommon.so.1"
+        "/usr/lib/libbrotlidec.so.1"
+        "/usr/lib/libbrotlienc.so.1"
     )
     for _extra in "${_extras[@]}"; do
         _to="${DOT}/pkgroot$(dirname $_extra)/"
         mkdir -p $_to
-        ${DOCKER} cp $c_name:$_extra $_to
+        ${DOCKER} cp -L $c_name:$_extra $_to
     done
 
     _opt="${DOT}/pkgroot/opt/ingress-metal"
@@ -47,7 +50,7 @@ main() {
     cp -f ${DOT}/bin/is-up.sh "$_opt/bin/"
 
     dpkg-deb --build --root-owner-group pkgroot ingress-metal.deb
-    ${DOCKER} rm -f -t0 $c_name
+    ${DOCKER} rm -f $c_name
 }
 
 detach() {
@@ -59,6 +62,7 @@ do_exodus() {
     # install exodus
     apk update
     apk add --no-cache python3
+    rm /usr/lib/python3.11/EXTERNALLY-MANAGED
     python3 -m ensurepip
     pip3 install exodus-bundler
 
@@ -74,8 +78,8 @@ do_exodus() {
 }
 
 cleanup() {
-    ${DOCKER} ps -a | grep "ingress-" | cut -d" " -f1 | xargs ${DOCKER} rm -f -t0
-    rm -rf ${DOT}/pkgroot/{usr/local/lib,etc,opt} ${DOT}/*.deb
+    ${DOCKER} ps -a | grep "ingress-" | cut -d" " -f1 | xargs ${DOCKER} rm -f
+    rm -rf ${DOT}/pkgroot/{usr/{local/{lib,share},lib},etc,opt} ${DOT}/*.deb
 }
 
 if test -z "$1"; then
