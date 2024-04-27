@@ -31,7 +31,7 @@ export POD_NAME=$(\
 
 RULES="$(sudo iptables-save)"
 (echo "$RULES" | grep 'ni-block-10254') || sudo iptables -A INPUT -i ${IFACE} -p tcp \
-    --dport 10254 -m comment --comment 'ni-block-10254' -j DROP 
+    --dport 10254 -m comment --comment 'ni-block-10254' -j DROP
 (echo "$RULES" | grep 'ni-block-8181') || sudo iptables -A INPUT -i ${IFACE} -p tcp \
     --dport 8181 -m comment --comment 'ni-block-8181' -j DROP
 
@@ -39,4 +39,3 @@ sudo -E ${DOT}/nginx-ingress-controller --http-port=80 --https-port=443 \
     --kubeconfig "${KC}" --enable-metrics=false \
     --election-id=ingress-metal \
     --configmap=${POD_NAMESPACE}/${CONFIG_MAP}
-
