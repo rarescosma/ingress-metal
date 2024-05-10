@@ -79,7 +79,7 @@ do_exodus() {
 
 cleanup() {
     ${DOCKER} ps -a | grep "ingress-" | cut -d" " -f1 | xargs ${DOCKER} rm -f
-    rm -rf ${DOT}/pkgroot/{usr/{local/{lib,share},lib},etc,opt} ${DOT}/*.deb
+    rm -rf ${DOT}/pkgroot/{usr/{local/{lib,share},lib},etc/nginx,opt} ${DOT}/*.deb
 }
 
 if test -z "$1"; then
