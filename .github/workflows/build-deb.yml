@@ -1,0 +1,28 @@
+name: Build deb
+
+on:
+  workflow_call: {}
+
+jobs:
+  build_deb:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Exodus
+        uses: addnab/docker-run-action@v3
+        with:
+          image: registry.k8s.io/ingress-nginx/controller:v1.10.1
+          options: -v ${{ github.workspace }}/build.sh:/build.sh -v ${{ github.workspace }}/exodus:/exodus -v ${{ github.workspace }}/pkgroot:/pkgroot --user root
+          run: |
+            /build.sh do_exodus
+            IN_DOCKER=1 /build.sh copy_extras
+      - name: Make deb
+        run: |
+          sudo ./build.sh make_deb
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ingress-metal-${{ github.sha }}_linux_amd64.deb
+          path: ingress-metal.deb
+          retention-days: 15

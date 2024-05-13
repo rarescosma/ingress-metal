@@ -1,0 +1,29 @@
+name: Release the Kraken
+
+on:
+  release:
+    types:
+      - prereleased
+
+jobs:
+  call_build_deb:
+    uses: ./.github/workflows/build-deb.yml
+
+  release_assets:
+    needs: ['call_build_deb']
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download deb
+        uses: actions/download-artifact@master
+        with:
+          name: ingress-metal-${{ github.sha }}_linux_amd64.deb
+          path: dist
+      - name: Upload deb
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: dist/ingress-metal.deb
+          asset_name: ingress-metal_linux_amd64.deb
+          asset_content_type: application/vnd.debian.binary-package
