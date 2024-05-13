@@ -3,11 +3,12 @@
 DOT=$(cd -P "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)
 IMAGE="${IMAGE:-registry.k8s.io/ingress-nginx/controller:v1.10.1}"
 DOCKER="${DOCKER:-docker}"
+IN_DOCKER="${IN_DOCKER:-0}"
 
 LUA_SHARE="/usr/local/share/lua/5.1"
 LUA_LIB="/usr/local/lib/lua/5.1"
 
-main() {
+check_deps() {
     _deps=(
         "openssl"
         "${DOCKER}"
@@ -19,42 +20,27 @@ main() {
             exit 1
         fi
     done
+}
 
+main() {
+    check_deps
+    docker_exodus
+    copy_extras
+    make_deb
+    ${DOCKER} rm -f $c_name
+}
+
+detach() {
+    sleep infinity
+}
+
+docker_exodus() {
     c_name="ingress-$(openssl rand -hex 12)"
     ${DOCKER} run -d --rm --name $c_name --entrypoint="/bin/bash" \
         -v ${DOT}/build.sh:/build.sh -v ${DOT}/exodus:/exodus \
         --user root \
         ${IMAGE} /build.sh detach
     ${DOCKER} exec -it $c_name /build.sh do_exodus
-
-    _extras=(
-        "/etc/nginx"
-        "${LUA_SHARE}"
-        "${LUA_LIB}/cjson.so"
-        "${LUA_LIB}/librestychash.so"
-        "/usr/lib/libbrotlicommon.so.1"
-        "/usr/lib/libbrotlidec.so.1"
-        "/usr/lib/libbrotlienc.so.1"
-    )
-    for _extra in "${_extras[@]}"; do
-        _to="${DOT}/pkgroot$(dirname $_extra)/"
-        mkdir -p $_to
-        ${DOCKER} cp -L $c_name:$_extra $_to
-    done
-
-    _opt="${DOT}/pkgroot/opt/ingress-metal"
-
-    ${DOT}/exodus/controller-setup "$_opt"
-    ${DOT}/exodus/nginx-setup "$_opt"
-    cp -f ${DOT}/bin/run.sh "$_opt/bin/"
-    cp -f ${DOT}/bin/is-up.sh "$_opt/bin/"
-
-    dpkg-deb --build --root-owner-group pkgroot ingress-metal.deb
-    ${DOCKER} rm -f $c_name
-}
-
-detach() {
-    sleep infinity
 }
 
 do_exodus() {
@@ -75,6 +61,38 @@ do_exodus() {
     mv /usr/local/lib/lua/ngx "${LUA_SHARE}"/
     mv /usr/local/lib/lua/resty "${LUA_SHARE}"/
     mv /usr/local/lib/lua/librestychash.so "${LUA_LIB}"/
+}
+
+make_deb() {
+    _opt="${DOT}/pkgroot/opt/ingress-metal"
+
+    ${DOT}/exodus/controller-setup "$_opt"
+    ${DOT}/exodus/nginx-setup "$_opt"
+    cp -f ${DOT}/bin/run.sh "$_opt/bin/"
+    cp -f ${DOT}/bin/is-up.sh "$_opt/bin/"
+
+    dpkg-deb --build --root-owner-group pkgroot ingress-metal.deb
+}
+
+copy_extras() {
+    _extras=(
+        "/etc/nginx"
+        "${LUA_SHARE}"
+        "${LUA_LIB}/cjson.so"
+        "${LUA_LIB}/librestychash.so"
+        "/usr/lib/libbrotlicommon.so.1"
+        "/usr/lib/libbrotlidec.so.1"
+        "/usr/lib/libbrotlienc.so.1"
+    )
+    for _extra in "${_extras[@]}"; do
+        _to="${DOT}/pkgroot$(dirname $_extra)/"
+        mkdir -p $_to
+        if [[ "${IN_DOCKER}" == "0" ]]; then
+          ${DOCKER} cp -L $c_name:$_extra $_to
+        else
+          cp -r -L $_extra $_to
+        fi
+    done
 }
 
 cleanup() {
