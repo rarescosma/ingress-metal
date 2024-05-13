@@ -1,5 +1,5 @@
 Package: ingress-metal
-Version: 1.0
+Version: 1.0.0
 Architecture: amd64
 Maintainer: Rares Cosma <rares@getbetter.ro>
 Description: nginx-ingress-controller fit for running on bare metal hosts.
